@@ -2,7 +2,7 @@ import { DatabaseModule, RmqModule } from '@app/common';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import Joi from 'joi';
+import * as Joi from 'joi';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -30,8 +30,9 @@ import { UsersModule } from './users/users.module';
         signOptions: {
           expiresIn: `${configService.get('JWT_EXPIRATION')}s`,
         },
-        inject: [ConfigService],
+  
       }),
+      inject: [ConfigService],
     }),
   ],
   controllers: [AuthController],
