@@ -13,26 +13,26 @@ export class UsersResolver {
 
   @Query(() => User, { nullable: true })
   findOne(@Args() payload: FindOneUserArgs): User {
-    return this.usersService.findOne();
+    return this.usersService.findOne(payload);
   }
 
   @Query(() => [User], { nullable: 'items' })
   find(@Args() payload: FindUsersArgs): User[] {
-    return this.usersService.find();
+    return this.usersService.find(payload);
   }
 
   @Mutation(() => User)
   create(@Args('createUserData') payload: CreateUserInput): User {
-    return this.usersService.create();
+    return this.usersService.create(payload);
   }
 
   @Mutation(() => User)
   update(@Args('updateUserData') payload: UpdateUserInput): User {
-    return this.usersService.update();
+    return this.usersService.update(payload);
   }
 
   @Mutation(() => User)
   remove(@Args('deleteUserData') payload: RemoveUserInput): User {
-    return this.usersService.remove();
+    return this.usersService.remove(payload);
   }
 }

@@ -4,7 +4,7 @@ import { IsEmail, IsNotEmpty, IsOptional } from 'class-validator';
 @InputType()
 export class UpdateUserInput {
   @Field()
-  @IsNotEmpty() 
+  @IsNotEmpty()
   _id: string;
 
   @Field()
@@ -12,7 +12,7 @@ export class UpdateUserInput {
   @IsNotEmpty()
   age?: number;
 
-  @Field()
+  @Field({ nullable: true })
   @IsOptional()
   isSubscribed?: boolean;
 }
