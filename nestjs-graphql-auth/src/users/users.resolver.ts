@@ -1,5 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { FindOneUserArgs } from './dtos/args/find-one.args';
+import { FindOneUserByEmailArgs } from './dtos/args/find-one-by-email.args';
+import { FindOneUserByIdArgs } from './dtos/args/find-one-by-id.args';
 import { FindUsersArgs } from './dtos/args/find.args';
 import { CreateUserInput } from './dtos/input/create.input';
 import { RemoveUserInput } from './dtos/input/remove.input';
@@ -12,8 +13,12 @@ export class UsersResolver {
   constructor(private readonly usersService: UsersService) {}
 
   @Query(() => User, { nullable: true })
-  findOne(@Args() payload: FindOneUserArgs): User {
-    return this.usersService.findOne(payload);
+  findOneById(@Args() payload: FindOneUserByIdArgs): User {
+    return this.usersService.findOneById(payload);
+  }
+  @Query(() => User, { nullable: true })
+  findOneByEmail(@Args() payload: FindOneUserByEmailArgs): User {
+    return this.usersService.findOneByEmail(payload);
   }
 
   @Query(() => [User], { nullable: 'items' })

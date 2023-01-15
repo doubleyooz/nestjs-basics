@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { FindOneUserArgs } from './dtos/args/find-one.args';
+import { FindOneUserByIdArgs } from './dtos/args/find-one-by-id.args';
+import { FindOneUserByEmailArgs } from './dtos/args/find-one-by-email.args';
 import { FindUsersArgs } from './dtos/args/find.args';
 import { CreateUserInput } from './dtos/input/create.input';
 import { RemoveUserInput } from './dtos/input/remove.input';
@@ -29,8 +30,12 @@ export class UsersService {
     return user;
   }
 
-  public findOne(payload: FindOneUserArgs): User {
+  public findOneById(payload: FindOneUserByIdArgs): User {
     return this.users.find((user) => user._id === payload._id);
+  }
+
+  public findOneByEmail(payload: FindOneUserByEmailArgs): User {
+    return this.users.find((user) => user.email === payload.email);
   }
 
   public find(payload: FindUsersArgs): User[] {

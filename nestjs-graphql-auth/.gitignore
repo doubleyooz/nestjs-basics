@@ -3,6 +3,7 @@
 /node_modules
 
 schema.gql
+.env
 # Logs
 logs
 *.log
