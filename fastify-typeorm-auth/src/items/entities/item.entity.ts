@@ -1,10 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-
+import { Column, Entity, JoinColumn, OneToMany } from 'typeorm';
+import { Review } from '../../reviews/entities/review.entity';
+import { AbstractEntity } from 'src/database/abstract.entity';
 @Entity()
-export class Item {
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class Item extends AbstractEntity<Item> {
   @Column()
   name: string;
 
@@ -14,7 +12,7 @@ export class Item {
   @Column({ default: true })
   public: boolean;
 
-  constructor(item: Partial<Item>) {
-    Object.assign(this, item);
-  }
+  @OneToMany(() => Review, (review) => review.item, { onDelete: 'CASCADE' })
+  @JoinColumn()
+  reviews: Review[];
 }

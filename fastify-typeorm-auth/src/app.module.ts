@@ -8,6 +8,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { ItemsModule } from './items/items.module';
+import { ReviewsModule } from './reviews/reviews.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -27,6 +28,7 @@ import { ItemsModule } from './items/items.module';
     }),
     DatabaseModule,
     ItemsModule,
+    ReviewsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

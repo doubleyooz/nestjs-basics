@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { EntityManager, Repository } from 'typeorm';
+
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
-import { EntityManager, Repository } from 'typeorm';
 import { Item } from './entities/item.entity';
-import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class ItemsService {
@@ -22,7 +23,10 @@ export class ItemsService {
   }
 
   async findOne(id: number) {
-    const item = await this.itemsRepository.findOneBy({ id });
+    const item = await this.itemsRepository.findOne({
+      where: { id },
+      relations: ['reviews'],
+    });
 
     if (!item) {
       throw new NotFoundException('Item not found');
