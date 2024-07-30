@@ -9,6 +9,7 @@ import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { ItemsModule } from './items/items.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { TagsModule } from './tags/tags.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -29,6 +30,7 @@ import { ReviewsModule } from './reviews/reviews.module';
     DatabaseModule,
     ItemsModule,
     ReviewsModule,
+    TagsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

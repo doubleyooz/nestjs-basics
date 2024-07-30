@@ -22,10 +22,10 @@ export class ItemsService {
     return await this.itemsRepository.find();
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, relations: string[] = ['reviews', 'tags']) {
     const item = await this.itemsRepository.findOne({
       where: { id },
-      relations: ['reviews'],
+      relations: relations,
     });
 
     if (!item) {
