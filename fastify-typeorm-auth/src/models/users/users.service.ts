@@ -1,14 +1,16 @@
 import {
   Injectable,
   NotFoundException,
+  UnauthorizedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, EntityManager } from 'typeorm';
-
+import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { FindUsersDto } from './dto/find-users.dto';
 
 @Injectable()
 export class UsersService {
@@ -37,11 +39,33 @@ export class UsersService {
     });
   }
 
-  async findAll() {
-    return await this.usersRepository.find();
+  async findAll(filters?: FindUsersDto) {
+    const queryBuilder = this.usersRepository.createQueryBuilder('user');
+
+    if (filters?.name) {
+      queryBuilder.andWhere('user.name LIKE :name', {
+        name: `%${filters.name}%`,
+      });
+    }
+
+    if (filters?.email) {
+      queryBuilder.andWhere('user.email = :email', { email: filters.email });
+    }
+
+    if (filters?.id) {
+      queryBuilder.andWhere('user.id = :id', { id: filters.id });
+    }
+
+    if (filters?.tokenVersion !== undefined) {
+      queryBuilder.andWhere('user.tokenVersion = :tokenVersion', {
+        tokenVersion: filters.tokenVersion,
+      });
+    }
+
+    return await queryBuilder.getMany();
   }
 
-  async findOne(id: number) {
+  async findOneById(id: number) {
     const user = await this.usersRepository.findOne({
       where: { id },
     });
@@ -54,7 +78,7 @@ export class UsersService {
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    const tag = await this.findOne(id);
+    const tag = await this.findOneById(id);
 
     tag.name = updateUserDto.name ?? tag.name;
 
@@ -63,5 +87,19 @@ export class UsersService {
 
   async remove(id: number) {
     await this.usersRepository.delete(id);
+  }
+
+  async validateUser(_email: string, _password: string) {
+    const user = await this.usersRepository.findOne({
+      where: { email: _email },
+      select: { password: true },
+    });
+    if (!user) throw new UnauthorizedException('Credentials are not valid');
+    const isValidPassword = await bcrypt.compare(_password, user.password);
+    if (!isValidPassword)
+      throw new UnauthorizedException('Credentials are not valid');
+    delete user.password;
+
+    return user;
   }
 }
