@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { Review } from '../../reviews/entities/review.entity';
 import { AbstractEntity } from 'src/database/abstract.entity';
-import { Tag } from 'src/tags/entities/tag.entity';
+import { Tag } from 'src/models/tags/entities/tag.entity';
 @Entity()
 export class Item extends AbstractEntity<Item> {
   @Column()

@@ -5,7 +5,7 @@ import { EntityManager, Repository } from 'typeorm';
 import { CreateTagDto } from './dto/create-tag.dto';
 import { UpdateTagDto } from './dto/update-tag.dto';
 import { Tag } from './entities/tag.entity';
-import { ItemsService } from 'src/items/items.service';
+import { ItemsService } from 'src/models/items/items.service';
 
 @Injectable()
 export class TagsService {
@@ -53,9 +53,6 @@ export class TagsService {
   async addTagToItem(tagId: number, itemId: number) {
     const tag = await this.findOne(tagId);
     const item = await this.itemsService.findOne(itemId, ['tags']);
-    console.log({ item });
-
-    console.log({ tag });
 
     item.tags = [...item.tags, tag];
 

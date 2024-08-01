@@ -1,5 +1,5 @@
 import { Column, Entity, JoinTable, ManyToMany } from 'typeorm';
-import { AbstractEntity } from '../../database/abstract.entity';
+import { AbstractEntity } from '../../../database/abstract.entity';
 import { Item } from '../../items/entities/item.entity';
 
 @Entity()
