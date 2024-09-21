@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config/dist';
 import { JwtService } from '@nestjs/jwt';
-import { User } from 'src/users/models/user.model';
-import { UsersService } from '../users/users.service';
+import { User } from '../models/users/entities/users.entity';
+import { UsersService } from '../models/users/users.service';
 import { ValidateLoginArgs } from './dto/args/validate-login.args';
 
 @Injectable()

@@ -8,7 +8,7 @@ import { PassportModule } from '@nestjs/passport';
 import * as Joi from 'joi';
 
 import { AuthService } from './auth.service';
-import { UsersModule } from 'src/users/users.module';
+import { UsersModule } from '../models/users/users.module';
 import { AuthController } from './auth.controller';
 
 @Module({

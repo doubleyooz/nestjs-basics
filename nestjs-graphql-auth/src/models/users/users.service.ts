@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { FindOneUserByIdArgs } from './dtos/args/find-one-by-id.args';
-import { FindOneUserByEmailArgs } from './dtos/args/find-one-by-email.args';
-import { FindUsersArgs } from './dtos/args/find.args';
-import { CreateUserInput } from './dtos/input/create.input';
-import { RemoveUserInput } from './dtos/input/remove.input';
-import { UpdateUserInput } from './dtos/input/update.input';
-import { User } from './models/user.model';
+import { FindOneUserByIdArgs } from './dto/args/find-one-by-id.args';
+import { FindOneUserByEmailArgs } from './dto/args/find-one-by-email.args';
+import { FindUsersArgs } from './dto/args/find.args';
+import { CreateUserInput } from './dto/input/create-user.request';
+import { RemoveUserInput } from './dto/input/remove-user.request';
+import { UpdateUserInput } from './dto/input/update-user.request';
+import { User } from './entities/users.entity';
 
 @Injectable()
 export class UsersService {
@@ -14,6 +14,7 @@ export class UsersService {
     {
       _id: randomUUID(),
       age: 25,
+      name: 'sdsadsa',
       email: 'i231hsada4@email.com',
       password: 'sdasdasda@sSa21',
     },
@@ -29,8 +30,8 @@ export class UsersService {
 
     return user;
   }
-  public update(updateUserData: UpdateUserInput): User {
-    const user = this.users.find((user) => user._id === updateUserData._id);
+  public update(id: string, updateUserData: UpdateUserInput): User {
+    const user = this.users.find((user) => user._id === id);
 
     Object.assign(user, updateUserData);
 
@@ -45,7 +46,7 @@ export class UsersService {
     return this.users.find((user) => user.email === payload.email);
   }
 
-  public find(payload: FindUsersArgs): User[] {
+  public findAll(payload: FindUsersArgs): User[] {
     if (payload.age)
       return this.users.filter((user) => user.age === payload.age);
     return this.users;

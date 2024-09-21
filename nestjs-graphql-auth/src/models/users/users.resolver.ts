@@ -1,12 +1,12 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from 'src/auth/current-user.decorator';
-import { FindOneUserByEmailArgs } from './dtos/args/find-one-by-email.args';
-import { FindOneUserByIdArgs } from './dtos/args/find-one-by-id.args';
-import { FindUsersArgs } from './dtos/args/find.args';
-import { CreateUserInput } from './dtos/input/create.input';
-import { RemoveUserInput } from './dtos/input/remove.input';
-import { UpdateUserInput } from './dtos/input/update.input';
-import { User } from './models/user.model';
+import { FindOneUserByEmailArgs } from './dto/args/find-one-by-email.args';
+import { FindOneUserByIdArgs } from './dto/args/find-one-by-id.args';
+import { FindUsersArgs } from './dto/args/find.args';
+import { CreateUserInput } from './dto/input/create-user.request';
+import { RemoveUserInput } from './dto/input/remove-user.request';
+import { UpdateUserInput } from './dto/input/update-user.request';
+import { User } from './entities/users.entity';
 import { UsersService } from './users.service';
 
 @Resolver(() => User)
@@ -25,7 +25,7 @@ export class UsersResolver {
 
   @Query(() => [User], { nullable: 'items' })
   find(@Args() payload: FindUsersArgs): User[] {
-    return this.usersService.find(payload);
+    return this.usersService.findAll(payload);
   }
 
   @Mutation(() => User)
@@ -35,7 +35,7 @@ export class UsersResolver {
 
   @Mutation(() => User)
   update(@Args('updateUserData') payload: UpdateUserInput): User {
-    return this.usersService.update(payload);
+    return this.usersService.update(payload._id, payload);
   }
 
   @Mutation(() => User)
