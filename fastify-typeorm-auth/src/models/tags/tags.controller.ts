@@ -10,17 +10,28 @@ import {
 import { TagsService } from './tags.service';
 import { CreateTagDto } from './dto/create-tag.dto';
 import { UpdateTagDto } from './dto/update-tag.dto';
+import { ApiConsumes, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiProduces } from '@nestjs/swagger';
 
 @Controller('tags')
 export class TagsController {
-  constructor(private readonly tagsService: TagsService) {}
+  constructor(private readonly tagsService: TagsService) { }
 
   @Post()
+  @ApiOperation({ summary: 'Create a tag.' })
+  @ApiCreatedResponse({
+    description: 'A tag has been successfully created.',
+  })
+  @ApiConsumes('application/json')
+  @ApiProduces('application/json')
   create(@Body() createTagDto: CreateTagDto) {
     return this.tagsService.create(createTagDto);
   }
 
   @Get()
+  @ApiOperation({ summary: 'Find all tags.' })
+  @ApiOkResponse({ description: 'Tags found and returned.' })
+  @ApiConsumes('application/json')
+  @ApiProduces('application/json')
   findAll() {
     return this.tagsService.findAll();
   }
