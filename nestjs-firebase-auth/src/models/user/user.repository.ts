@@ -84,7 +84,7 @@ export class UsersRepository extends AbstractRepository<User> {
         return obj;
       }, {} as Partial<User>);
 
-    return this.findOneAndUpdate(userId, sanitizedUpdates);
+    return this.findOneByIdAndUpdate(userId, sanitizedUpdates);
   }
 
   // Check if email exists

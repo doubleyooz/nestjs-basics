@@ -11,8 +11,8 @@ describe('UserService', () => {
       create: jest.fn(),
       findAll: jest.fn(),
       findOne: jest.fn(),
-      findOneAndUpdate: jest.fn(),
-      findOneAndDelete: jest.fn(),
+      findOneByIdAndUpdate: jest.fn(),
+      findOneByIdAndDelete: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

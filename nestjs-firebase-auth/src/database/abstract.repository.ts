@@ -18,6 +18,11 @@ export abstract class AbstractDocument {
   updatedAt?: FieldValue | Date;
 }
 
+export type OrderByCondition = {
+  field: string;
+  direction?: 'asc' | 'desc';
+};
+
 export abstract class AbstractRepository<TDocument extends AbstractDocument> {
   protected collection: CollectionReference;
 
@@ -72,7 +77,7 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
     }) as TDocument;
   }
 
-  async findOne(
+  async findOneById(
     id: string,
     options?: {
       populate?: (doc: TDocument) => Promise<TDocument>;
@@ -142,7 +147,68 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
     return document;
   }
 
-  async findOneAndUpdate(
+  async findOneByQueryAndUpdate(
+    queryBuilder: (collection: CollectionReference) => Query,
+    update: Partial<TDocument>,
+    options?: {
+      merge?: boolean;
+      transaction?: Transaction;
+      populate?: (doc: TDocument) => Promise<TDocument>;
+    },
+  ): Promise<TDocument> {
+    const query: Query = queryBuilder(this.collection);
+    let snapshot: QuerySnapshot;
+
+    if (options?.transaction) {
+      snapshot = await options.transaction.get(query);
+    } else {
+      snapshot = await query.get();
+    }
+
+    if (snapshot.empty) {
+      this.logger.warn('Document not found with query');
+      throw new NotFoundException('Document not found.');
+    }
+
+    // Get the first matching document
+    const doc = snapshot.docs[0];
+    const docRef = this.collection.doc(doc.id);
+
+    const updateData = {
+      ...update,
+      updatedAt: FieldValue.serverTimestamp(),
+    };
+
+    // Update the document
+    if (options?.transaction) {
+      await options.transaction.update(docRef, updateData);
+    } else {
+      await docRef.update(updateData);
+    }
+
+    // Fetch the updated document
+    const updatedSnapshot = options?.transaction
+      ? await options.transaction.get(docRef)
+      : await docRef.get();
+
+    if (!updatedSnapshot.exists) {
+      this.logger.warn('Document disappeared after update');
+      throw new NotFoundException('Document not found after update.');
+    }
+
+    let document = this.convertTimestamps({
+      id: updatedSnapshot.id,
+      ...updatedSnapshot.data(),
+    }) as TDocument;
+
+    if (options?.populate) {
+      document = await options.populate(document);
+    }
+
+    return document;
+  }
+
+  async findOneByIdAndUpdate(
     id: string,
     update: Partial<TDocument>,
     options?: {
@@ -186,7 +252,51 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
     return document;
   }
 
-  async findOneAndDelete(
+  async findOneByQueryAndDelete(
+    queryBuilder: (collection: CollectionReference) => Query,
+    options?: {
+      transaction?: Transaction;
+      populate?: (doc: TDocument) => Promise<TDocument>;
+    },
+  ): Promise<TDocument> {
+    const query: Query = queryBuilder(this.collection);
+    let snapshot: QuerySnapshot;
+
+    if (options?.transaction) {
+      snapshot = await options.transaction.get(query);
+    } else {
+      snapshot = await query.get();
+    }
+
+    if (snapshot.empty) {
+      this.logger.warn('Document not found with query');
+      throw new NotFoundException('Document not found.');
+    }
+
+    // Get the first matching document
+    const doc = snapshot.docs[0];
+    const docRef = this.collection.doc(doc.id);
+
+    // Get the document data before deletion
+    let document = this.convertTimestamps({
+      id: doc.id,
+      ...doc.data(),
+    }) as TDocument;
+
+    // Delete the document
+    if (options?.transaction) {
+      options.transaction.delete(docRef);
+    } else {
+      await docRef.delete();
+    }
+
+    if (options?.populate) {
+      document = await options.populate(document);
+    }
+
+    return document;
+  }
+  async findOneByIdAndDelete(
     id: string,
     options?: {
       transaction?: Transaction;

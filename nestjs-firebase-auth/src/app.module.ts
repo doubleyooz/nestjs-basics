@@ -15,6 +15,7 @@ import { AuthModule } from './auth/auth.module';
     ConfigModule.forRoot({
       validationSchema: Joi.object({
         PORT: Joi.number().required(),
+        FIREBASE_PRIVATE_KEY: Joi.string().required(),
       }),
       isGlobal: true,
     }),

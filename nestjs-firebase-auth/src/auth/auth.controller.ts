@@ -6,6 +6,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Patch,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -13,11 +14,14 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import type { DecodedIdToken } from 'firebase-admin/auth';
+
 import { AuthService } from './auth.service';
 import { VerifyTokenDto } from './dto/verify-token.dto';
 import { FirebaseAuthGuard } from './guards/firebase-auth.guard';
 import { User } from './decorators/user.decorator';
-import type { DecodedIdToken } from 'firebase-admin/auth';
+import { UpdatePasswordDto } from './dto/update-password.dto';
+import { LoginDto } from './dto/login.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -53,7 +57,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Login with Firebase ID token' })
+  @ApiOperation({ summary: 'Login with Email and Password' })
   @ApiResponse({
     status: 200,
     description: 'Login successful',
@@ -73,17 +77,13 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 401, description: 'Invalid or expired token' })
-  async login(@Body() verifyTokenDto: VerifyTokenDto) {
-    const decodedToken = await this.authService.verifyToken(
-      verifyTokenDto.idToken,
+  async login(@Body() loginDto: LoginDto) {
+    const decodedToken = await this.authService.login(
+      loginDto.email,
+      loginDto.password,
     );
     return {
-      message: 'Login successful',
-      user: {
-        uid: decodedToken.uid,
-        email: decodedToken.email,
-        name: decodedToken.name,
-      },
+      ...decodedToken,
     };
   }
 
@@ -107,6 +107,53 @@ export class AuthController {
     await this.authService.revokeRefreshTokens(user.uid);
     return {
       message: 'Logout successful. All refresh tokens have been revoked.',
+    };
+  }
+
+  @Patch('reset-password')
+  @UseGuards(FirebaseAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reset password' })
+  @ApiResponse({
+    status: 200,
+    description: 'Password reset successful',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async resetPassword(@User() user: DecodedIdToken) {
+    await this.authService.revokeRefreshTokens(user.uid);
+    return {
+      message:
+        'Password reset successful. All refresh tokens have been revoked.',
+    };
+  }
+
+  @Patch('change-password')
+  @UseGuards(FirebaseAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Change password' })
+  @ApiResponse({
+    status: 200,
+    description: 'Password changed successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async updatePassword(@Body() updatePasswordDto: UpdatePasswordDto) {
+    await this.authService.updatePasswordWithVerification(updatePasswordDto);
+    return {
+      message: 'Password changed successfully.',
     };
   }
 
