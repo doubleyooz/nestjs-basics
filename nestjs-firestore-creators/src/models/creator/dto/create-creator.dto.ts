@@ -1,6 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import type { SocialMediaPlatform } from '../creator.schema';
+import {
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+import { Impact, type SocialMediaPlatform } from '../creator.schema';
 
 export class CreateCreatorDto {
   @ApiProperty({
@@ -37,4 +43,13 @@ export class CreateCreatorDto {
     platform: SocialMediaPlatform;
     url: string;
   }[];
+
+  @ApiProperty({
+    description: 'Filter by impact level',
+    enum: Impact,
+    example: 'high',
+  })
+  @IsEnum(Impact)
+  @IsOptional()
+  impact?: Impact;
 }

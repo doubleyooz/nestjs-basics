@@ -1,3 +1,5 @@
+import { AbstractDocument } from 'src/database/abstract.document';
+
 export enum Impact {
   'low',
   'medium',
@@ -16,8 +18,7 @@ export enum SocialMediaPlatform {
   'website',
 }
 
-export interface Creator {
-  id?: string;
+export interface Creator extends AbstractDocument {
   name: string;
   description: string;
   profilePicture: string;
@@ -25,7 +26,5 @@ export interface Creator {
     platform: SocialMediaPlatform;
     url: string;
   }[];
-  createdAt?: Date;
-  updatedAt?: Date;
   impact: Impact;
 }

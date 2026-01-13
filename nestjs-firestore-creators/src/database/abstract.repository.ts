@@ -11,12 +11,7 @@ import {
   FieldValue,
 } from 'firebase-admin/firestore';
 import { PinoLogger } from 'nestjs-pino';
-
-export abstract class AbstractDocument {
-  id?: string;
-  createdAt?: FieldValue | Date;
-  updatedAt?: FieldValue | Date;
-}
+import { AbstractDocument } from './abstract.document';
 
 export type OrderByCondition = {
   field: string;
@@ -29,7 +24,7 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
   constructor(
     protected readonly firestore: Firestore,
     private readonly collectionName: string,
-    private readonly logger: PinoLogger,
+    protected readonly logger: PinoLogger,
   ) {
     this.collection = this.firestore.collection(collectionName);
     this.logger.setContext(this.constructor.name);
@@ -82,8 +77,9 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
     options?: {
       populate?: (doc: TDocument) => Promise<TDocument>;
       transaction?: Transaction;
+      selection?: (keyof TDocument)[];
     },
-  ): Promise<TDocument> {
+  ): Promise<TDocument | null> {
     let docRef: DocumentReference;
     let snapshot: DocumentSnapshot;
 
@@ -97,13 +93,25 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
 
     if (!snapshot.exists) {
       this.logger.warn('Document not found with id', id);
-      throw new NotFoundException('Document not found.');
+      return null;
     }
 
     let document = this.convertTimestamps({
       id: snapshot.id,
       ...snapshot.data(),
     }) as TDocument;
+
+    // Apply selection if provided
+    if (options?.selection) {
+      document = Object.keys(options.selection).reduce((acc, key) => {
+        if (options.selection?.[key]) {
+          acc[key] = document[key as keyof TDocument];
+        }
+        return acc;
+      }, {} as TDocument);
+      // Always include id
+      document.id = snapshot.id;
+    }
 
     // Simple population implementation (you might need to customize this)
     if (options?.populate) {
@@ -118,6 +126,7 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
     options?: {
       populate?: (doc: TDocument) => Promise<TDocument>;
       transaction?: Transaction;
+      selection?: (keyof TDocument)[];
     },
   ): Promise<TDocument> {
     const query: Query = queryBuilder(this.collection);
@@ -139,6 +148,18 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
       id: doc.id,
       ...doc.data(),
     }) as TDocument;
+
+    // Apply selection if provided
+    if (options?.selection) {
+      document = Object.keys(options.selection).reduce((acc, key) => {
+        if (options.selection?.[key]) {
+          acc[key as keyof TDocument] = document[key as keyof TDocument];
+        }
+        return acc;
+      }, {} as TDocument);
+      // Always include id
+      document.id = doc.id;
+    }
 
     if (options?.populate) {
       document = await options.populate(document);
@@ -362,7 +383,7 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
         };
 
     if (options?.transaction) {
-      await options.transaction.set(docRef, operationData, {
+      options.transaction.set(docRef, operationData, {
         merge: options.merge ?? true,
       });
     } else {
@@ -418,14 +439,36 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
   async findAll(options?: {
     populate?: (doc: TDocument) => Promise<TDocument>;
     transaction?: Transaction;
+    selection?: (keyof TDocument)[];
   }): Promise<TDocument[]> {
-    return this.find((col) => col, options);
+    let results = await this.find((col) => col, options);
+
+    if (options?.selection && options.selection.length > 0) {
+      const selection = options.selection;
+
+      const pick = (obj: TDocument, keys: (keyof TDocument)[]) => {
+        const result: Partial<TDocument> = {};
+        keys.forEach((key) => {
+          if (key in obj) {
+            result[key] = obj[key];
+          }
+        });
+        return result;
+      };
+
+      results = results.map((doc) => pick(doc, selection) as TDocument);
+    }
+
+    return results;
   }
 
   async startTransaction(): Promise<Transaction> {
-    return this.firestore.runTransaction(async (transaction) => {
-      return transaction;
+    let tx: Transaction;
+    await this.firestore.runTransaction(async (transaction) => {
+      tx = transaction;
     });
+    // @ts-expect-error - tx is definitely assigned after runTransaction
+    return tx;
   }
 
   async runTransaction<T>(
@@ -434,7 +477,7 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
     return this.firestore.runTransaction(updateFunction);
   }
 
-  async batch(): Promise<WriteBatch> {
+  batch(): WriteBatch {
     return this.firestore.batch();
   }
 

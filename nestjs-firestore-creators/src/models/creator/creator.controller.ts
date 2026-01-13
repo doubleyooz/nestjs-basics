@@ -9,15 +9,17 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { CreatorService } from './creator.service';
 import { CreateCreatorDto } from './dto/create-creator.dto';
 import { UpdateCreatorDto } from './dto/update-creator.dto';
-import { FirebaseAuthGuard } from 'src/auth/guards/firebase-auth.guard';
-import { User } from 'src/auth/decorators/user.decorator';
-import type { DecodedIdToken } from 'firebase-admin/auth';
+import { FirestoreAuthGuard } from 'src/auth/guards/firestore-auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger/dist/decorators/api-bearer.decorator';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { FindCreatorsDto } from './dto/find-creators.dto';
+import { CurrentUser } from 'src/auth/current-user.decorator';
+import type { User } from '../user/user.schema';
 
 @Controller('creators')
 export class CreatorController {
@@ -25,12 +27,12 @@ export class CreatorController {
 
   @Post()
   create(@Body() createCreatorDto: CreateCreatorDto) {
-    return this.creatorService.create(createCreatorDto);
+    return this.creatorService.createCreator(createCreatorDto);
   }
 
   @Get()
-  findAll() {
-    return this.creatorService.findAll();
+  findAll(@Query() filters: FindCreatorsDto) {
+    return this.creatorService.findAll(filters);
   }
 
   @Get(':id')
@@ -39,7 +41,7 @@ export class CreatorController {
   }
 
   @Patch(':id')
-  @UseGuards(FirebaseAuthGuard)
+  @UseGuards(FirestoreAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Update the authenticated user' })
@@ -54,11 +56,11 @@ export class CreatorController {
     },
   })
   update(@Param('id') id: string, @Body() updateCreatorDto: UpdateCreatorDto) {
-    return this.creatorService.update(id, updateCreatorDto);
+    return this.creatorService.updateCreator(id, updateCreatorDto);
   }
 
   @Delete()
-  @UseGuards(FirebaseAuthGuard)
+  @UseGuards(FirestoreAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete the authenticated user' })
@@ -72,7 +74,7 @@ export class CreatorController {
       },
     },
   })
-  remove(@User() user: DecodedIdToken) {
-    return this.creatorService.removeOneById(user.uid);
+  remove(@CurrentUser() user: User) {
+    return this.creatorService.deleteOneById(user.id);
   }
 }

@@ -8,10 +8,8 @@ import {
 import type { Creator, Impact, SocialMediaPlatform } from './creator.schema';
 import { CreateCreatorDto } from './dto/create-creator.dto';
 import { UpdateCreatorDto } from './dto/update-creator.dto';
-import {
-  CreatorRepository,
-  FindCreatorsFilterOptions,
-} from './creator.repository';
+import { CreatorRepository } from './creator.repository';
+import { FindCreatorsDto } from './dto/find-creators.dto';
 
 @Injectable()
 export class CreatorService {
@@ -31,17 +29,14 @@ export class CreatorService {
     }
   }
 
-  async findAll(maxResults: number = 1000): Promise<{
+  async findAll(filters: FindCreatorsDto): Promise<{
     creators: Creator[];
   }> {
     try {
-      const creators = await this.creatorRepository.findAllCreators();
-
-      // Apply maxResults limit
-      const limitedCreators = creators.slice(0, maxResults);
+      const creators = await this.creatorRepository.findCreators(filters);
 
       return {
-        creators: limitedCreators,
+        creators,
       };
     } catch (error) {
       throw new InternalServerErrorException('Failed to retrieve creators');
@@ -74,23 +69,23 @@ export class CreatorService {
       // Prepare update data
       const updateData: Partial<Creator> = {};
 
-      if (updateCreatorDto.name !== undefined) {
+      if (updateCreatorDto.name) {
         updateData.name = updateCreatorDto.name;
       }
 
-      if (updateCreatorDto.description !== undefined) {
+      if (updateCreatorDto.description) {
         updateData.description = updateCreatorDto.description;
       }
 
-      if (updateCreatorDto.profilePicture !== undefined) {
+      if (updateCreatorDto.profilePicture) {
         updateData.profilePicture = updateCreatorDto.profilePicture;
       }
 
-      if (updateCreatorDto.socialMediaPlatforms !== undefined) {
+      if (updateCreatorDto.socialMediaPlatforms) {
         updateData.socialMediaPlatforms = updateCreatorDto.socialMediaPlatforms;
       }
 
-      if (updateCreatorDto.impact !== undefined) {
+      if (updateCreatorDto.impact) {
         updateData.impact = updateCreatorDto.impact;
       }
 
@@ -140,17 +135,7 @@ export class CreatorService {
     }
   }
 
-  async findCreators(options: FindCreatorsFilterOptions) {
-    try {
-      return await this.creatorRepository.findCreators(options);
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Failed to retrieve creators by impact',
-      );
-    }
-  }
-
-  async removeOneById(id: string): Promise<{ message: string; id: string }> {
+  async deleteOneById(id: string): Promise<{ message: string; id: string }> {
     try {
       // Check if creator exists
       const exists = await this.creatorRepository.creatorExists(id);
@@ -281,18 +266,6 @@ export class CreatorService {
       return await this.creatorRepository.count();
     } catch (error) {
       throw new InternalServerErrorException('Failed to count creators');
-    }
-  }
-
-  async getRecentCreators(limit: number = 5): Promise<Creator[]> {
-    try {
-      const creators = await this.creatorRepository.findAllCreators();
-      // Sort by createdAt descending and take limit
-      return creators
-        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-        .slice(0, limit);
-    } catch (error) {
-      throw new InternalServerErrorException('Failed to get recent creators');
     }
   }
 }

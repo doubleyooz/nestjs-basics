@@ -1,12 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { LoggerModule } from 'nestjs-pino';
 
 import * as Joi from 'joi';
-import * as admin from 'firebase-admin';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { FirebaseModule } from './database/firebase.module';
-import { LoggerModule } from 'nestjs-pino';
+
+import { CreatorModule } from './models/creator/creator.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -24,6 +27,8 @@ import { LoggerModule } from 'nestjs-pino';
     }),
     LoggerModule.forRoot(),
     FirebaseModule,
+    CreatorModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

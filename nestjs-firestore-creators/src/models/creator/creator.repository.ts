@@ -5,25 +5,7 @@ import { Firestore } from 'firebase-admin/firestore';
 import { Creator, SocialMediaPlatform, Impact } from './creator.schema';
 import { PinoLogger } from 'nestjs-pino';
 import { CreateCreatorDto } from './dto/create-creator.dto';
-
-export type FindCreatorsFilterOptions = {
-  id?: string;
-  name?: string;
-  platform?: SocialMediaPlatform;
-  impact?: Impact;
-  searchTerm?: string;
-  filters?: {
-    impact?: Impact;
-    platform?: SocialMediaPlatform;
-    createdAtAfter?: Date;
-    createdAtBefore?: Date;
-  };
-  limit?: number;
-  orderBy?: {
-    field: keyof Creator | 'createdAt' | 'name' | 'impact';
-    direction?: 'asc' | 'desc';
-  };
-}
+import { FindCreatorsDto } from './dto/find-creators.dto';
 
 @Injectable()
 export class CreatorRepository extends AbstractRepository<Creator> {
@@ -45,47 +27,36 @@ export class CreatorRepository extends AbstractRepository<Creator> {
       description: createDto.description,
       profilePicture: createDto.profilePicture || '', // Default empty string
       socialMediaPlatforms: createDto.socialMediaPlatforms,
-      impact: options?.impact || 'medium',
+      impact: options?.impact || Impact.medium,
       id: '',
     };
 
     return this.create(dbInput);
   }
 
-  async findCreators(options?: FindCreatorsFilterOptions): Promise<Creator[] | Creator> {
+  async findCreators(options?: FindCreatorsDto): Promise<Creator[]> {
     // If ID is provided, return a single creator
     if (options?.id) {
-      return this.findOneById(options.id);
+      const creator = await this.findOneById(options.id);
+      return creator ? [creator] : [];
     }
 
-    // If name is provided, return a single creator by name
-    if (options?.name) {
-      return this.findOneByQuery((col) =>
-        col.where('name', '==', options.name).limit(1),
-      );
-    }
-
-    // If searchTerm is provided, perform search
-    if (options?.searchTerm) {
-      return this.find((col) =>
-        col
-          .where('name', '>=', options.searchTerm)
-          .where('name', '<=', options.searchTerm + '\uf8ff')
-          .limit(options?.limit || 20),
-      );
+    if (!options) {
+      return this.findAll();
     }
 
     // Build the query based on filters
     return this.find((col) => {
       let query: FirebaseFirestore.Query = col;
 
-      // Handle platform filter (single platform)
       if (options?.platform) {
-        query = query.where(
-          'socialMediaPlatforms.platform',
-          'array-contains',
-          options.platform,
-        );
+        query = query.where('platforms', 'array-contains', options.platform);
+      }
+
+      if (options?.name) {
+        query = query
+          .where('name', '>=', options.name)
+          .where('name', '<=', options.name + '\uf8ff');
       }
 
       // Handle impact filter (single impact)
@@ -93,36 +64,15 @@ export class CreatorRepository extends AbstractRepository<Creator> {
         query = query.where('impact', '==', options.impact);
       }
 
-      // Handle complex filters
-      if (options?.filters) {
-        const { filters } = options;
-
-        if (filters.impact) {
-          query = query.where('impact', '==', filters.impact);
-        }
-
-        if (filters.platform) {
-          query = query.where(
-            'socialMediaPlatforms.platform',
-            'array-contains',
-            filters.platform,
-          );
-        }
-
-        if (filters.createdAtAfter) {
-          query = query.where('createdAt', '>=', filters.createdAtAfter);
-        }
-
-        if (filters.createdAtBefore) {
-          query = query.where('createdAt', '<=', filters.createdAtBefore);
-        }
+      if (options?.createdAtAfter) {
+        query = query.where('createdAt', '>=', options.createdAtAfter);
       }
 
-      // Apply ordering
-      const orderByField = options?.orderBy?.field || 'createdAt';
-      const orderByDirection = options?.orderBy?.direction || 'desc';
+      if (options?.createdAtBefore) {
+        query = query.where('createdAt', '<=', options.createdAtBefore);
+      }
 
-      query = query.orderBy(orderByField, orderByDirection);
+      query = query.orderBy('createdAt', 'desc');
 
       // Apply limit if specified
       if (options?.limit) {
@@ -131,12 +81,6 @@ export class CreatorRepository extends AbstractRepository<Creator> {
 
       return query;
     });
-  }
-
-  // Keep the findAllCreators method as a convenience wrapper
-  async findAllCreators(limit?: number): Promise<Creator[]> {
-    const result = await this.findCreators({ limit });
-    return Array.isArray(result) ? result : [result];
   }
 
   // Keep findCreatorById as a convenience wrapper (returns Promise<Creator>)
