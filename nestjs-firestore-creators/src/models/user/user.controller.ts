@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { FirestoreAuthGuard } from 'src/auth/guards/firestore-auth.guard';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { ApiBearerAuth } from '@nestjs/swagger/dist/decorators/api-bearer.decorator';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Request } from 'express';
@@ -43,7 +43,7 @@ export class UserController {
   }
 
   @Delete()
-  @UseGuards(FirestoreAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete the authenticated user' })

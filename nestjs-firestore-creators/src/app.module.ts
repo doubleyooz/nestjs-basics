@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 
 import * as Joi from 'joi';
@@ -22,6 +22,8 @@ import { AuthModule } from './auth/auth.module';
         REFRESH_TOKEN_SECRET: Joi.string().required(),
         REFRESH_TOKEN_EXPIRATION: Joi.number().required(),
         FIREBASE_PRIVATE_KEY: Joi.string().required(),
+        GOOGLE_CLIENT_ID: Joi.string().required(),
+        GOOGLE_CLIENT_SECRET: Joi.string().required(),
       }),
       isGlobal: true,
     }),

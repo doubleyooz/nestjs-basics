@@ -14,18 +14,19 @@ import {
 import { CreatorService } from './creator.service';
 import { CreateCreatorDto } from './dto/create-creator.dto';
 import { UpdateCreatorDto } from './dto/update-creator.dto';
-import { FirestoreAuthGuard } from 'src/auth/guards/firestore-auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger/dist/decorators/api-bearer.decorator';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { FindCreatorsDto } from './dto/find-creators.dto';
-import { CurrentUser } from 'src/auth/current-user.decorator';
+import { CurrentUser } from '../../auth/current-user.decorator';
 import type { User } from '../user/user.schema';
+import { JwtAuthGuard } from '../../auth/guards/jwt.guard';
 
 @Controller('creators')
 export class CreatorController {
   constructor(private readonly creatorService: CreatorService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   create(@Body() createCreatorDto: CreateCreatorDto) {
     return this.creatorService.createCreator(createCreatorDto);
   }
@@ -41,7 +42,7 @@ export class CreatorController {
   }
 
   @Patch(':id')
-  @UseGuards(FirestoreAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Update the authenticated user' })
@@ -60,7 +61,7 @@ export class CreatorController {
   }
 
   @Delete()
-  @UseGuards(FirestoreAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete the authenticated user' })
