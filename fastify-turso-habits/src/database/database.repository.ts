@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Inject, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core';
 import type { AnySQLiteTable, SQLiteColumn, SQLiteTableWithColumns } from "drizzle-orm/sqlite-core";
@@ -49,14 +49,29 @@ export abstract class DatabaseRepository<
     }
 
 
-    async create(document: InferInsertModel<T>): Promise<InferSelectModel<T>> {
+async create(document: InferInsertModel<T>): Promise<InferSelectModel<T>> {
+    this.logger.debug({ document }, 'DatabaseRepository.create: input');
+    try {
         const [row] = await this.db
             .insert(this.table)
             .values(document as any)
             .returning();
+        if (!row) {
+            throw new Error('Insert returned no row');
+        }
+        this.logger.debug({ row }, 'DatabaseRepository.create: ok');
         return row as InferSelectModel<T>;
+    } catch (err: any) {   
+       
+        if (err.code === '23505' || err.cause.message.includes('UNIQUE constraint failed')) {
+            this.logger.error('Conflict detected: This email is already registered.');
+            // Handle the HTTP 409 response or user warning here
+            throw new ConflictException(err.cause.message);
+        } 
+        this.logger.error(err)
+        throw err;   // re-throw so the HTTP layer still 500s
     }
-
+}
 
     async findAll
         (

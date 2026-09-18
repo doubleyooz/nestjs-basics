@@ -1,9 +1,10 @@
 // src/users/users.repository.ts
-import { Inject, Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { eq, and, sql, type SQLWrapper } from 'drizzle-orm';
 import { LibSQLDatabase } from 'drizzle-orm/libsql';
 import { PinoLogger } from 'nestjs-pino';
+import * as bcrypt from 'bcrypt';
 
 import { DatabaseRepository } from '../../database/database.repository.js';
 import { DatabaseAsyncProvider } from '../../database/database.provider.js';
@@ -20,6 +21,23 @@ export class UsersService extends DatabaseRepository<typeof schema.users> {
     logger: PinoLogger,
   ) {
     super(db, config, schema.users, logger);
+  }
+
+  async create(document: NewUser): Promise<User> {
+    this.logger.debug({ document }, 'UsersService.create: input');
+    const saltRounds = this.configService.get<number>('HASH_SALT') ?? 10;
+    const hashedPassword = await bcrypt.hash(document.password, saltRounds);
+    document.password = hashedPassword;
+    try {
+      return await super.create(document);
+    } catch (err) {
+      if (err instanceof ConflictException) {
+        this.logger.error('Conflict detected: This email is already registered.');
+        throw new ConflictException('This email is already registered.');
+      }
+      throw err;
+    }
+     
   }
 
   async findByEmail(email: string): Promise<User | undefined> {

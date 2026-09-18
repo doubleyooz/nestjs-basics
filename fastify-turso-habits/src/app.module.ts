@@ -23,7 +23,14 @@ import { LoggerModule } from 'nestjs-pino';
     }),
     isGlobal: true,
     }),
-    LoggerModule.forRoot(),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        // Enable pretty printing ONLY in development mode for better performance
+        transport: process.env.NODE_ENV !== 'production' 
+          ? { target: 'pino-pretty', options: { colorize: true } } 
+          : undefined,
+      },
+    }),
     UsersModule,
     DatabaseModule
   ],

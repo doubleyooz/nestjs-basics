@@ -5,6 +5,7 @@ import {
   IsEmail,
   IsNotEmpty,
   IsString,
+  IsStrongPassword,
   Matches,
 } from 'class-validator';
 
@@ -25,8 +26,8 @@ export class CreateUserDto {
   })
   @IsString()
   @IsDefined()
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/)
   @IsNotEmpty()
+  @IsStrongPassword()
   password: string;
 
   @ApiProperty({
@@ -41,12 +42,4 @@ export class CreateUserDto {
   @Exclude()
   tokenVersion: number;
 
-  @Exclude()
-  active: boolean;
-
-  @Exclude()
-  codeToValidate: string;
-
-  @Exclude()
-  codeExpiration: string;
 }
