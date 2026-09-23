@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { Logger } from 'nestjs-pino';
-
+import fastifyCookie from '@fastify/cookie';
 import {
   FastifyAdapter,
   NestFastifyApplication,
@@ -25,6 +25,7 @@ async function bootstrap() {
     
   const document = SwaggerModule.createDocument(app, documentBuilder);
   SwaggerModule.setup('api', app, document);
+  await app.register(fastifyCookie);
   app.useLogger(app.get(Logger));
   await app.listen(process.env.PORT ?? 3000);
 }

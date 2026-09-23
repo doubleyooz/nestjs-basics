@@ -8,6 +8,7 @@ import { DatabaseModule } from './database/database.module.js';
 import Joi from 'joi';
 import { UsersModule } from './models/user/users.module.js';
 import { LoggerModule } from 'nestjs-pino';
+import { HabitsModule } from './models/habit/habits.module.js';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -32,6 +33,7 @@ import { LoggerModule } from 'nestjs-pino';
       },
     }),
     UsersModule,
+    HabitsModule,
     DatabaseModule
   ],
   controllers: [AppController],
