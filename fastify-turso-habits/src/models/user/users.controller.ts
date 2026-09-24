@@ -32,9 +32,14 @@ export class UsersController {
 
   @Get()
   @ApiQuery({
-    name: 'name',
+    name: 'username',
     required: false,
-    description: 'Filter users by name.',
+    description: 'Filter users by username.',
+  })
+    @ApiQuery({
+    name: 'email',
+    required: false,
+    description: 'Filter users by email.',
   })
   @ApiOperation({ summary: 'Find all users.' })
   @ApiOkResponse({ description: 'Users found and returned.' })
@@ -43,10 +48,8 @@ export class UsersController {
   findAll(
     @Query('username') username: string,
     @Query('email') email: string,
-    @Query('tokenVersion') tokenVersion: number,
-    @Query('id') id: number,
   ) {
-    return this.usersService.findAll({ username, email, id, tokenVersion });
+    return this.usersService.findAll({ username, email });
   }
 
   @Get(':id') 

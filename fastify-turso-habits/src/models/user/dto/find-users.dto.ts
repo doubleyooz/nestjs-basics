@@ -1,13 +1,20 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateUserDto } from './create-user.dto.js';
-import { IsNumber, IsOptional } from 'class-validator';
 
-export class FindUsersDto extends PartialType(CreateUserDto) {
-  @IsNumber()
-  @IsOptional()
-  tokenVersion?: number;
+import { ApiProperty } from '@nestjs/swagger';
+import { Exclude } from 'class-transformer';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
-  @IsNumber()
+export class FindUsersDto {
+  
+  @ApiProperty({
+    example: 'John',
+    description: 'A username of a user',
+    required: false,
+  })
   @IsOptional()
-  id?: number;
+  @IsString()
+  username: string;
+
+  @Exclude()
+  id: number;
+  
 }
